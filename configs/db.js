@@ -2,25 +2,45 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
-// Server-side only environment variable for DB URL
-const databaseUrl = process.env.DRIZZLE_DATABASE_URL;
+/**
+ * Lazy database initializer.
+ * We avoid initializing the DB at module import time so Next.js build does not
+ * try to connect or throw when environment variables are intentionally absent
+ * during build-time. Call `getDb()` from server-only runtime (API routes)
+ * to get the `drizzle` instance.
+ */
 
-if (!databaseUrl) {
-  throw new Error("Database URL is not defined in environment variables");
+let _db = null;
+let _pool = null;
+
+export async function getDb() {
+  if (_db) return _db;
+
+  const databaseUrl = process.env.DRIZZLE_DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('Database URL is not defined in environment variables');
+  }
+
+  _pool = new Pool({ connectionString: databaseUrl });
+
+  // verify connection (non-blocking but helpful)
+  try {
+    const client = await _pool.connect();
+    client.release();
+    console.log('Connected to PostgreSQL database');
+  } catch (err) {
+    console.error('Error connecting to the database:', err);
+    throw err;
+  }
+
+  _db = drizzle(_pool);
+  return _db;
 }
 
-// Initialize the PostgreSQL connection pool
-const pool = new Pool({
-  connectionString: databaseUrl,
+// Backwards-compatible named export that throws if used at import-time.
+Object.defineProperty(exports, 'db', {
+  enumerable: true,
+  get() {
+    throw new Error('Use getDb() (async) instead of importing `db` directly.');
+  },
 });
-
-// Connect to the database and log the connection status
-pool.connect()
-  .then(client => {
-    console.log('Connected to PostgreSQL database');
-    client.release(); // Release the client back to the pool
-  })
-  .catch(err => console.error('Error connecting to the database:', err));
-
-// Export the drizzle instance for use in your application
-export const db = drizzle(pool);

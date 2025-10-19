@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'; // Used for returning responses
-import { db } from '@/configs/db'; // Database connection/config
+import { getDb } from '@/configs/db'; // Database connection/config
 import { Users } from '@/configs/schema'; // Database schema
 import { eq } from 'drizzle-orm'; // Used for query conditions
 
@@ -18,8 +18,9 @@ export async function GET(req) {
       );
     }
 
-    // Query the database for the user details based on email
-    const userDetails = await db.select().from(Users).where(eq(Users.email, email));
+  // Query the database for the user details based on email
+  const db = await getDb();
+  const userDetails = await db.select().from(Users).where(eq(Users.email, email));
 
     // Check if user exists
     if (userDetails.length === 0) {

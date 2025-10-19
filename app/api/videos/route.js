@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/configs/db';
+import { getDb } from '@/configs/db';
 import { VideoData } from '@/configs/schema';
 import { eq } from 'drizzle-orm';
 
@@ -12,6 +12,7 @@ export async function GET(req) {
   }
 
   try {
+      const db = await getDb();
     const result = await db
       .select()
       .from(VideoData)

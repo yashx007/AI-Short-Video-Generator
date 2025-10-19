@@ -19,16 +19,8 @@ function PlayerDialog({ playVideo, videoId }) {
 
   const router = useRouter();
 
-  // Effect to control the dialog opening and fetch video data
-  useEffect(() => {
-    if (playVideo && videoId) {
-      setOpenDialog(true); // Open dialog only when `playVideo` is true and `videoId` is valid
-      GetVideoData(); // Fetch the video data
-    }
-  }, [playVideo, videoId]);
-
-  // Function to fetch video data
-  const GetVideoData = async () => {
+  // Memoize GetVideoData so it can be used safely in effect deps
+  const GetVideoData = React.useCallback(async () => {
     try {
       const response = await fetch(`/api/videoData?videoId=${videoId}`);
       const data = await response.json();
@@ -42,7 +34,18 @@ function PlayerDialog({ playVideo, videoId }) {
     } catch (error) {
       console.error("Error fetching video data:", error);
     }
-  };
+  }, [videoId]);
+
+  // Effect to control the dialog opening and fetch video data
+  useEffect(() => {
+    if (playVideo && videoId) {
+      setOpenDialog(true); // Open dialog only when `playVideo` is true and `videoId` is valid
+      GetVideoData(); // Fetch the video data
+    }
+  }, [playVideo, videoId, GetVideoData]);
+
+  // Function to fetch video data
+  // (implementation moved above and memoized)
 
   return (
     <Dialog open={openDialog}>

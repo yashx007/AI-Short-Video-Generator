@@ -1,0 +1,38 @@
+# Dockerfile for Remotion rendering (headless Chromium + ffmpeg)
+FROM node:20-bullseye-slim
+
+WORKDIR /remotion
+
+# Install dependencies required for headless chromium and ffmpeg
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    fonts-liberation \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libc6 \
+    libcairo2 \
+    libasound2 \
+    libnss3 \
+    libx11-6 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libgtk-3-0 \
+    wget \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Chromium (stable) from Debian repo or fallback to playwright-chromium later
+RUN apt-get update && apt-get install -y chromium && rm -rf /var/lib/apt/lists/* || true
+
+COPY package.json package-lock.json* ./
+RUN npm ci --production --no-audit --prefer-offline || true
+
+COPY . .
+
+ENV REMOTION_OUTPUT_DIR=/remotion/out
+RUN mkdir -p $REMOTION_OUTPUT_DIR
+
+# Default command: run Remotion render when container runs (override in CI)
+CMD ["npx", "remotion", "render", "src/index.jsx", "out/video.mp4"]

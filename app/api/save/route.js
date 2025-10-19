@@ -1,6 +1,6 @@
 // app/api/save/route.js
 import { NextResponse } from 'next/server';
-import { db } from '@/configs/db';
+import { getDb } from '@/configs/db';
 import { VideoData } from '@/configs/schema';
 
 export async function POST(req) {
@@ -31,6 +31,7 @@ export async function POST(req) {
     console.log('Received createdBy field:', createdBy);
 
     // Save to database
+    const db = await getDb();
     const result = await db.insert(VideoData).values({
       script: videoData.script,
       audioFileUrl: videoData.audioFileUrl,

@@ -168,76 +168,75 @@ function CreateNew() {
   };
   
 
-  useEffect(() => {
-    if (Object.keys(videoData).length >= 4) {
-      SaveVideoData(videoData);
+  // Persist video data once it's populated. SaveVideoData is memoized to
+  // keep a stable reference for the effect dependency array.
+  const UpdateUserCredits = React.useCallback(async () => {
+    try {
+      // Call server API to update credits instead of touching DB from client
+      const email = user?.primaryEmailAddress?.emailAddress;
+      if (!email) return;
+
+      await axios.post('/api/updateUserCredits', {
+        email,
+        creditsToDeduct: 10,
+      });
+
+      // Update local user detail state
+      setUserDetail((prev) => ({ ...prev, credits: (prev?.credits || 0) - 10 }));
+
+      setVideoData(null);
+    } catch (error) {
+      console.error('Error updating credits:', error);
     }
-  }, [videoData]);
+  }, [user, setUserDetail, setVideoData]);
 
-
-
-  
-  const SaveVideoData = async (videoData) => {
+  const SaveVideoData = React.useCallback(async (videoDataParam) => {
     try {
       const createdBy = user?.primaryEmailAddress?.emailAddress;
       if (!createdBy) {
         console.error('CreatedBy is missing');
         return;
       }
-  
-      // Validate input data
-      if (!videoData || !videoData.videoScript || !videoData.audioFileUrl || !videoData.imageList) {
+
+      if (!videoDataParam || !videoDataParam.videoScript || !videoDataParam.audioFileUrl || !videoDataParam.imageList) {
         console.error('Missing required fields in videoData');
         return;
       }
-  
-      // POST request
+
       const response = await axios.post('/api/save', {
         videoData: {
-          script: videoData.videoScript,
-          audioFileUrl: videoData.audioFileUrl,
-          captions: videoData.captions,
-          imageList: videoData.imageList,
+          script: videoDataParam.videoScript,
+          audioFileUrl: videoDataParam.audioFileUrl,
+          captions: videoDataParam.captions,
+          imageList: videoDataParam.imageList,
         },
-        createdBy, // Pass separately
+        createdBy,
       });
-  
-      // Handle success
+
       const savedId = response.data?.result?.[0]?.id;
       if (savedId) {
         await UpdateUserCredits();
         setVideoId(savedId);
         setPlayVideo(true);
       }
+
       console.log('Video data saved successfully:', response.data);
     } catch (error) {
       console.error('Error saving video data:', error.response ? error.response.data : error.message);
-      // Optionally set error state or show notification to user
     }
-  };
+  }, [user, UpdateUserCredits]);
 
-
-
-
-  const UpdateUserCredits = async () => {
-    try {
-      const result = await db.update(Users)
-        .set({ credits: userDetail?.credits - 10 })
-        .where(eq(Users?.email, user?.primaryEmailAddress?.emailAddress));
-  
-      console.log("Credits updated in database:", result);
-  
-      // Use `prev` to ensure the state update triggers a re-render
-      setUserDetail((prev) => ({
-        ...prev,
-        credits: prev?.credits - 10,
-      }));
-  
-      setVideoData(null); // Clear video data
-    } catch (error) {
-      console.error("Error updating credits:", error);
+  useEffect(() => {
+    if (videoData && Object.keys(videoData).length >= 4) {
+      SaveVideoData(videoData);
     }
-  };
+  }, [videoData, SaveVideoData]);
+
+
+
+  
+  // old client-side SaveVideoData/UpdateUserCredits removed in favor of
+  // memoized versions above that call the server APIs.
   
   
   

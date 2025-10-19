@@ -117,3 +117,51 @@ Make sure you have the following installed:
 
    Navigate to [http://localhost:3000](http://localhost:3000) in your browser to view the project.
 
+   ## Docker (local build & Remotion renderer)
+
+   You can containerize the Next.js app and the Remotion renderer to run builds and server-side rendering in CI or locally.
+
+   - Build the Next.js production image:
+
+   ```powershell
+   docker build -f Dockerfile -t ai-short-video-app:latest .
+   ```
+
+   - Build the Remotion renderer image (includes ffmpeg/chromium):
+
+   ```powershell
+   docker build -f Dockerfile.remotion -t ai-short-video-remotion:latest .
+   ```
+
+   - Run the Remotion renderer (example):
+
+   ```powershell
+   docker run --rm -v ${PWD}/remotion/out:/remotion/out ai-short-video-remotion:latest
+   ```
+
+   Notes:
+   - The Remotion container installs ffmpeg and chromium to allow headless rendering. You may need to tweak the `Dockerfile.remotion` for your environment.
+
+   ## GitHub Actions & CI/CD
+
+   This repository includes three workflows under `.github/workflows`:
+
+   - `ci.yml` — runs on push and PRs to `main`; installs dependencies, runs lint/tests (if present), and builds Next.js.
+   - `docker-publish.yml` — builds and publishes Docker images (app + remotion) on git tag push (vX.Y.Z) or manual dispatch. It pushes to GitHub Container Registry by default.
+   - `deploy-firebase.yml` — builds the app and deploys to Firebase Hosting on push to `main` (requires `FIREBASE_TOKEN`).
+
+   Required repository secrets:
+
+   - `FIREBASE_TOKEN` — a CI token generated via `firebase login:ci` for deploying to Firebase.
+   - (Optional) If you want to push to Docker Hub instead of GHCR, set `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` and modify the `docker-publish.yml` accordingly.
+
+   Example: create a Firebase token and add it to GitHub secrets
+
+   ```powershell
+   # Locally (your dev machine)
+   npm i -g firebase-tools
+   firebase login:ci
+   # copy the printed token and add it to the repo secrets as FIREBASE_TOKEN
+   ```
+
+

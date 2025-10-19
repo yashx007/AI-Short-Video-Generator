@@ -14,11 +14,12 @@ export async function GET(req) {
       );
     }
   
-    try {
-      const result = await db
-        .select()
-        .from(VideoData)
-        .where(eq(VideoData.id, videoId));
+      try {
+        const db = await getDb();
+        const result = await db
+          .select()
+          .from(VideoData)
+          .where(eq(VideoData.id, videoId));
   
       // Log the result of the database query to the server console
       console.log('Database Result:', result);

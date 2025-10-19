@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/configs/db'; // Database connection
+import { getDb } from '@/configs/db'; // Database connection
 import { Users } from '@/configs/schema'; // Users schema
 import { eq } from 'drizzle-orm'; // For conditions
 
@@ -18,6 +18,7 @@ export async function POST(req) {
     }
 
     // Fetch the user's current credits
+    const db = await getDb();
     const [user] = await db
       .select()
       .from(Users)

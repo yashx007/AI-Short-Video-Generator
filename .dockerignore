@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+dist
+build
+.git
+.github
+*.log
+Dockerfile*
+docker-compose.*
+.env
+/.vscode
+coverage
+public/uploads
+remotion/out

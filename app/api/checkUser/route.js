@@ -1,4 +1,4 @@
-import { db } from "@/configs/db";
+import { getDb } from "@/configs/db";
 import { Users } from "@/configs/schema";
 import { eq } from "drizzle-orm";
 
@@ -15,6 +15,7 @@ export async function POST(req) {
         throw new Error('Name is required');
       }
   
+      const db = await getDb();
       const existingUser = await db
         .select()
         .from(Users)
