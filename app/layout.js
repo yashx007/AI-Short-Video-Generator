@@ -1,6 +1,6 @@
 
 import "./globals.css";
-import ClerkProviderClient from './ClerkProviderClient';
+import Providers from './providers';
 import {Outfit} from 'next/font/google'
 import { Toaster } from "@/components/ui/sonner";
 
@@ -14,13 +14,11 @@ const outfit = Outfit({subsets:['latin']})
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProviderClient>
-      <html lang="en">
-        <body className={outfit.className}>
-          {children}
-          <Toaster />
-        </body>
-      </html>
-    </ClerkProviderClient>
+    <html lang="en">
+      <body className={outfit.className}>
+        <Providers>{children}</Providers>
+        <Toaster />
+      </body>
+    </html>
   );
 }
