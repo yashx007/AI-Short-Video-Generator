@@ -1,5 +1,4 @@
 
-```markdown
 # AI Short Video Generator
 
 This project allows users to generate AI-powered short videos using advanced technologies such as Gemini, Google Cloud Text-to-Speech API, Replicate Image API, and more. The frontend is built using **Next.js**, with backend services powered by **Neon**, **Drizzle ORM**, and **Firebase**.
